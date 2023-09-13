@@ -1,0 +1,32 @@
+import os
+import pdfplumber
+from docx import Document
+import unicodedata
+
+# Function to clean text and make it XML-compatible
+def clean_text(text):
+    return ''.join(char if unicodedata.category(char)[0] != 'C' else ' ' for char in text)
+
+# Input and output directories
+pdf_folder = r'pdf_folder_path'
+docx_folder = r'doc_folder_path'
+
+# Iterate through PDF files
+for filename in os.listdir(pdf_folder):
+    if filename.endswith('.pdf'):
+        pdf_path = os.path.join(pdf_folder, filename)
+        docx_path = os.path.join(docx_folder, filename.replace('.pdf', '.docx'))
+        
+        # Open PDF file using pdfplumber
+        with pdfplumber.open(pdf_path) as pdf:
+            # Create a new DOCX file
+            doc = Document()
+            
+            # Iterate through PDF pages and extract text, cleaning it
+            for page_num in range(len(pdf.pages)):
+                page = pdf.pages[page_num]
+                text = clean_text(page.extract_text())
+                doc.add_paragraph(text.encode('utf-8', 'ignore').decode('utf-8'))
+            
+            # Save DOCX file
+            doc.save(docx_path)
